@@ -5,4 +5,13 @@
 data/
 outputs/
 NFPR.Rproj
+RMD/RMD_outputs
+shiny/NF_App/Data
+shiny/NF_App/rsconnect/shinyapps.io/pcdrm/NF_App.dcf
+shiny/NF_App/WWW/
+shiny/NF_App/WWW/Thumbs.db
+RMD/PR_Report-2023-08-02_files
+~$PR3_Report-2023-07-19.docx
+~$PR3_Report-2023-06-27.docx
+
 
