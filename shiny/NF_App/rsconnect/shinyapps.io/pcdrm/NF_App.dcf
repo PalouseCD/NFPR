@@ -5,10 +5,8 @@ account: pcdrm
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8471787
-bundleId: 6913164
+bundleId: 7846291
 url: https://pcdrm.shinyapps.io/NF_App/
-when: 1677873700.02429
-lastSyncTime: 1677873700.0243
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: Output/NF_WQdata_2022.csv
+ignoredFiles: Data/PRtribs_2020-02-19_to_2022-07-25_.csv|Data/PRtribs_Clean_2018-05-16_to_2023-03-06_.csv|Data/PRTribs_Daily_Averages_2002-01-15_to_2023-01-26_.csv
