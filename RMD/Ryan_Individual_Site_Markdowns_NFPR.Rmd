@@ -1,0 +1,624 @@
+---
+params:
+  MONITORING_SITE_ID: 
+    value: "NFPR3" #put NFPR site name here! 
+    
+### Make sure to change the name in output_file to desired report name ###
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "R:/_04_Project_Data/R/NFPR/RMD" , output_file = paste("NFPR3_Report-", Sys.Date(), ".docx", sep=''))}) #Output name must be manually named
+  
+output: word_document
+
+
+---
+```{r watershed_setup, message=FALSE, warning=FALSE, include=FALSE}
+## Follow instructions below to generate a report for an individual sampling site.
+
+
+# 1) ENTER DESIRED SITE NAME BELOW
+
+MONITORING_SITE_ID = params
+
+if(MONITORING_SITE_ID == "DR0.51"){
+  MONITORING_SITE_NAME = "Dry Creek 0.51"
+}
+
+if(MONITORING_SITE_ID == "NFPR3"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 3"
+}
+
+if(MONITORING_SITE_ID == "NFPR5A"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 5A"
+}
+
+if(MONITORING_SITE_ID == "NFPR6"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 6"
+}
+
+if(MONITORING_SITE_ID == "NFPR6P"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 6P"
+}
+
+if(MONITORING_SITE_ID == "NFPR8"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 8"
+}
+
+if(MONITORING_SITE_ID == "NFPR8A"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 8A"
+}
+
+if(MONITORING_SITE_ID == "NFPR9"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 9"
+}
+
+if(MONITORING_SITE_ID == "NFPR9B"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 9B"
+}
+
+if(MONITORING_SITE_ID == "NFPR12"){
+  MONITORING_SITE_NAME = "North Fork Palouse River 12"
+}
+
+if(MONITORING_SITE_ID == "PAL112.4"){
+  MONITORING_SITE_NAME = "Palouse River 112.4"
+}
+
+# 2) NOW CLICK KNIT (ABOVE) & A REPORT WILL BE GENERATED AUTOMATICALLY
+```
+
+```{r data_import, message=FALSE, warning=FALSE, include=FALSE}
+
+#load libraries
+library(lubridate)
+library(tidyverse)
+library(ggthemes)
+library(pals)
+library(here)
+
+#set up color palette for graphs
+colors <- unname(glasbey())
+
+
+#import data
+
+if (MONITORING_SITE_ID == "DR0.51"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/DR0.51.csv")
+}
+
+if (MONITORING_SITE_ID == "NFPR3"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR3.csv")
+}
+  
+if (MONITORING_SITE_ID == "NFPR5A"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR5A.csv") 
+}  
+
+if (MONITORING_SITE_ID == "NFPR6"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR6.csv")
+}
+
+if (MONITORING_SITE_ID == "NFPR6P"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR6P.csv")
+}
+
+if (MONITORING_SITE_ID == "NFPR8"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR8.csv")
+}
+
+if (MONITORING_SITE_ID == "NFPR8A"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR8A.csv")
+}
+
+if (MONITORING_SITE_ID == "NFPR9"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR9.csv")
+}
+
+if (MONITORING_SITE_ID == "NFPR9B"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR9B.csv")
+}
+
+if (MONITORING_SITE_ID == "NFPR12"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/NFPR12.csv")
+}
+
+if (MONITORING_SITE_ID == "PAL112.4"){
+  MASTER = read.csv("R:/_04_Project_Data/R/NFPR/outputs/Individual_Sites/PAL112.4.CSV")
+}
+
+FIRST_SAMPLE <- min(MASTER$Datetime) 
+FIRST_SAMPLE <- sub(" .*", "", FIRST_SAMPLE)
+FIRST_SAMPLE <- format(as.Date(FIRST_SAMPLE),'%m/%d/%Y')
+
+LAST_SAMPLE <- max(MASTER$Datetime)
+LAST_SAMPLE <- sub(" .*", "", LAST_SAMPLE)
+LAST_SAMPLE <- format(as.Date(LAST_SAMPLE),'%m/%d/%Y')
+
+```
+<center>
+![](P:/Logos and Letterhead/PCD Steptoe Logo/PCD Steptoe Logo.png){#id .class width=75 height=90px}
+</center>
+
+<center>
+# `r MONITORING_SITE_NAME` (`r MONITORING_SITE_ID`) Water Quality Report - Updated `r LAST_SAMPLE`
+</center>
+
+---
+#SITE ID ON PNG FILE AND CAPTION MUST BE MANUALLY CHANGED, AS FILE NAMING CONVENTIONS ARE IDENTICAL
+#NAMING CONVENTION: "SITE ID"_Layout.png
+---
+
+![NFPR3 Site Map](O:/Research_and_Monitoring/Water_Quality/Projects/WQ Site Maps/Maps/NFPR3_Layout.png){}. 
+
+
+This is a water quality monitoring summary created by the Palouse Conservation District's Research & Monitoring program. This report contains data from water quality samples collected in `r MONITORING_SITE_NAME` (`r MONITORING_SITE_ID`). Measurements have been collected monthly since `r FIRST_SAMPLE`, with the last water sample collected on `r LAST_SAMPLE`. Several figures have been generated below to show the trends in water quality parameters throughout the sampling period. For more information, please contact Ryan Boylan at RyanB@PalouseCD.org, or Gerrit Bass at GerritB@PalouseCD.org. You can also visit our website for more information about the Research & Monitoring program, https://www.palousecd.org/research-and-monitoring. 
+
+***
+### **Water Temperature** 
+
+The figure below displays the water temperature ($^\circ$C) from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. The red dotted line represents the State of Washington's threshold for water temperature (17.5$^\circ$C)([**WAC 173-201A-200**](https://apps.leg.wa.gov/wac/default.aspx?cite=173-201a-200)). Temperature is measured every 15 minutes in the field using a Hobo temperature sensor and manually measured monthly by PCD staff using a YSI ProDSS.
+
+```{r watertemperature_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+#set up temporary file
+TEMP = MASTER[,c(1,2, 17)]
+colnames(TEMP) = c("Station", "Datetime", "TempC")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$TempC),], aes(x = as.Date(Datetime), y = TempC, group = factor(Station), color = Station))+
+  geom_point(size = 1)+
+  geom_line(size = 1)+
+  geom_hline(aes(yintercept = 17.5, linetype ="WA Water Temperature Threshold"), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("Temperature (C)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "2 months", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+```
+</center>
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+### **Air Temperature** 
+
+The figure below displays the air temperature ($^\circ$C) from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Temperature is measured monthly in the field using a thermometer or a Hobo air temperature sensor.
+
+```{r airtemperature_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+#set up temporary file
+TEMP = MASTER[,c(1,2, 3)] #Change df name
+colnames(TEMP) = c("Station", "Datetime", "AirTemp")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$AirTemp),], aes(x = as.Date(Datetime), y = AirTemp, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  ylab("Temperature (C)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "2 months", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+```
+
+\newpage
+
+### **Stage** 
+
+The figure below displays stream height, or stage (ft) from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Stage height is measured in the field using a pressure sensor.
+
+```{r stage_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+#set up temporary file
+TEMP = MASTER[,c(1,2, 19)]
+colnames(TEMP) = c("Station", "Datetime", "Stage")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$Stage),], aes(x = as.Date(Datetime), y = Stage, group = factor(Station), color = Station))+
+  geom_point(size = 1)+
+  geom_line(size = 1)+
+  ylab("Stage (ft)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+```
+
+\newpage
+
+### **Dissolved Oxygen** 
+
+The figures below display dissolved oxygen (DO), in milligrams per liter (mg/L) from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. The red dotted line represents the lower threshold for DO (9.5 mg/L) established by the State of Washington ([**WAC 173-201A-200**](https://apps.leg.wa.gov/wac/default.aspx?cite=173-201a-200)). DO is the amount of gaseous oxygen dissolved in the water, which benefits aquatic life. DO levels can change seasonally and even throughout the day. DO is measured in the field using a YSI ProDSS. 
+
+```{r DO_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = MASTER[,c(1,2, 5)]
+colnames(TEMP) = c("Station", "Datetime", "DO")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$DO),], aes(x = as.Date(Datetime), y = DO, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+   geom_hline(aes(yintercept = 9.5, linetype ="Dissolved Oxygen Min."), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("Dissolved Oxygen (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "2 months", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **Specific Conductivity**
+The figure below displays specific conductivity (SC), measured in microsiemens per centimeter (uS/cm), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`.  This is a measure of electrical conductance and acts as an indicator for the concentration of salts and other ions in the water. Conductivity is measured in the field using a YSI ProDSS.
+
+```{r Conduct_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = MASTER[,c(1,2, 13)]
+colnames(TEMP) = c("Station", "Datetime", "COND")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$COND),], aes(x = as.Date(Datetime), y = COND, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  ylab("Conductivity (uS/cm)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "2 months", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **pH** 
+The figure below displays pH levels in the stream from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. pH measurements indicate levels of acidity or alkalinity. The pH scale ranges from 0 to 14 and is an important indicator of health in aquatic ecosystems. Variations in pH levels allow for pollutants, such as heavy metals and nutrients, to be more easily dissolved in water. pH is measured monthly using a handheld YSI ProDSS. The red dotted lines on the graph indicate the minimum and maximum thresholds, 6.5 and 8.5 pH units, for pH according to the Water Quality Standards for Surface Waters of the State of Washington ([**WAC 173-201A-200**](https://apps.leg.wa.gov/wac/default.aspx?cite=173-201a-200)).
+
+```{r pH_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = MASTER[,c(1,2, 11)]
+colnames(TEMP) = c("Station", "Datetime", "pH")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$pH),], aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  geom_hline(aes(yintercept = 8.5, linetype ="pH Limits"), color = "red", size = 2)+
+  geom_hline(aes(yintercept = 6.5, linetype ="pH Limits"), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("pH")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "2 months", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **Turbidity** 
+The figure below displays a measure of water clarity, measured in nephelometric turbidity units (NTU), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Turbidity is measured by determining how much light can pass through the water. Water clarity directly affects ecological productivity and habitat quality in aquatic environments. Excessive turbidity can be caused by physical disruption of the stream channel or through sediment inputs as a result of runoff and upland erosion.  Turbidity is measured using a handheld YSI ProDSS.
+
+```{r Turbid_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = MASTER[,c(1,2, 16)]
+colnames(TEMP) = c("Station", "Datetime", "Turbidity")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$Turbidity),], aes(x = as.Date(Datetime), y = (Turbidity), group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  ylab("Log of Turbidity (NTU)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "2 months", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))+
+  scale_y_log10(labels = function(x) format(x, scientific = FALSE))
+  
+ 
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\n
+
+**Note: Y-axis is on a log scale to better visualize the full spectrum of data values**
+
+\newpage
+
+### **Discharge (Q)** 
+The figure below shows stream discharge, measured in cubic feet per second (CFS) from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Stream discharge is calculated by measuring velocity across the cross-sectional area of a stream channel. Measuring devices include a velocity meter and stadia rod or measuring tape. Measuring discharge allows for the calculation of nutrient and sediment loading, which is the total mass of a pollutant within a stream.
+
+```{r Q_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = MASTER[,c(1,2, 12)]
+colnames(TEMP) = c("Station", "Datetime", "Q")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$Q),], aes(x = as.Date(Datetime), y = Q, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  ylab("Discharge (CFS)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "2 months", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **Fecal Coliform** 
+The figures below show fecal coliform, measured monthly in colony-forming units per 100 milliliters of water (CFU/100mL), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. The graph below displays a red dotted line representing the State of Washington's threshold for fecal coliform levels ([**WAC 173-201A-200**](https://apps.leg.wa.gov/wac/default.aspx?cite=173-201a-200)). A fecal coliform is a group of coliform bacteria used to indicate fecal contamination in water bodies. The samples are collected in-stream and analyzed at the Colfax Wastewater Treatment Plant regional lab. 
+
+```{r FC_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = MASTER[,c(1,2, 7)]
+colnames(TEMP) = c("Station", "Datetime", "FecalColiform")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$FecalColiform),], aes(x = as.Date(Datetime), y = FecalColiform, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  geom_hline(aes(yintercept = 100, linetype ="WA Fecal Coliform Threshold"), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("Fecal Coliform (CFU)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "2 months", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Ammonia** 
+The figures below display ammonia concentration, measured in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Ammonia is a common form of nitrogen found in streams, mostly originating from sewage systems and fertilizer applications It is harmful to fish and other aquatic organisms with a concentration of less than 1 mg/L. Ammonia concentrations are derived from monthly in-stream water samples.   
+
+```{r NH3_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = MASTER[,c(1,2, 9)]
+colnames(TEMP) = c("Station", "Datetime", "NH3")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$NH3),], aes(x = as.Date(Datetime), y = NH3, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  ylab("Ammonia (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Nitrate/Nitrite**
+The figure below displays nitrate/nitrite measurements, measured in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Nitrate and nitrite are common forms of nitrogen found in streams. Nitrogen is found naturally in the environment and is fairly abundant. However, excess nitrogen, from sewage systems and fertilizer applications, can push aquatic ecosystems out of equilibrium and harm them. Nitrate & nitrite samples are collected monthly in-stream.
+
+```{r N_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = MASTER[,c(1,2, 8)]
+colnames(TEMP) = c("Station", "Datetime", "N")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$N),], aes(x = as.Date(Datetime), y = N, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  ylab("Nitrate/Nitrite (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Total Phosphorus** 
+The figure below displays the total phosphorus concentration, in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. The red dotted line identifies the water quality criteria for phosphorus recommended by the U.S. EPA's ecoregional guidance. Total phosphorus and orthophosphate are two forms of phosphorus measured in streams. While being a vital nutrient for aquatic life, phosphorus can be detrimental when present in excess. Phosphorus is used as a chemical fertilizer in agriculture and can lead to eutrophication in streams and lakes. Total phosphorus samples are collected monthly in-stream. 
+
+```{r TP_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = MASTER[,c(1,2, 15)]
+colnames(TEMP) = c("Station", "Datetime", "TP")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$TP),], aes(x = as.Date(Datetime), y = TP, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  geom_hline(aes(yintercept = 0.1, linetype ="Total Phosphorus Max."), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("Total Phosphorus (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Orthophosphate**
+The figure below displays orthophosphate (OP) concentrations, in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. In addition to the total phosphorus values displayed above, orthophosphates, the dissolved form of phosphorous, can provide an estimate of how much phosphorus is available to aquatic plants. OP can also aid in the identification of pollution sources since it is commonly derived from fertilizers or other anthropogenic sources. Orthophosphate samples are collected monthly in-stream.
+
+```{r OP_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = MASTER[,c(1, 2, 10)]
+colnames(TEMP) = c("Station", "Datetime", "OP")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$OP),], aes(x = as.Date(Datetime), y = OP, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  ylab("Orthophosphate (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Suspended Sediment Concentration** 
+The figure below displays suspended sediment concentration (SSC), measured in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Sediment typically enters streams after a rainfall event through erosion and runoff. Depending on the power of the stream and the amount of sediment, it can either be transported downstream or deposited in the channel. Both of these actions, in excess, can cause problems for aquatic ecosystems and downstream water users since sediment can carry pollutants and have multiple adverse effects on biota. SSC samples are collected monthly in-stream.
+
+```{r sed_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = MASTER[,c(1,2,14)]
+colnames(TEMP) = c("Station", "Datetime", "SSC")
+
+TEMP_PLOT = ggplot(TEMP[!is.na(TEMP$SSC),], aes(x = as.Date(Datetime), y = SSC, group = factor(Station), color = Station))+
+  geom_point(size = 3)+
+  geom_line(size = 1)+
+  ylab("Log of Suspended Sediment Concentration (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = TRUE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+ ## date_break may need to be changed if data set has too many months
+  theme(axis.text.x=element_text(angle=60, hjust=1))+
+   scale_y_log10(labels = function(x) format(x, scientific = FALSE))
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\n
+
+**Note: Y-axis is on a log scale to better visualize the full spectrum of data values** 
+

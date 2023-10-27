@@ -1,0 +1,615 @@
+---
+params:
+  WATERSHED_ID: 
+    value: "KT" #put watershed abrev here! (CT for Cow & Thorn, KT for Kamiache & Thorn, or NSF North & South Fork)
+    
+### Make sure to change the name in output_file to desired report name ###
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "Reports/" , output_file = paste("NSF_Report-", Sys.Date(), ".docx", sep=''))})
+  
+output:
+  word_document: 
+      reference_docx: Supporting-Docs/margin_styles.docx
+
+
+---
+```{r watershed_setup, message=FALSE, warning=FALSE, include=FALSE}
+## Follow instructions below to generate a report for an individual sampling site.
+
+
+# 1) ENTER DESIRED WATERSHED BELOW (Kamiache and Thorn Creeks, Cow and Thorn Creeks, North and South Fork)
+
+WATERSHED_ID = params
+
+if(WATERSHED_ID == "CT"){
+  WATERSHED_NAME = "Cow and Thorn Creeks"
+}
+
+if(WATERSHED_ID == "KT"){
+  WATERSHED_NAME = "Kamiache and Thorn Creeks"
+}
+
+if(WATERSHED_ID == "NSF"){
+  WATERSHED_NAME = "North and South Fork"
+}
+
+# 2) NOW CLICK KNIT (ABOVE) & A REPORT WILL BE GENERATED AUTOMATICALLY
+```
+
+```{r data_import, message=FALSE, warning=FALSE, include=FALSE}
+
+#load libraries
+library(lubridate)
+library(tidyverse)
+library(ggthemes)
+library(pals)
+
+#set up color palette for graphs
+colors <- unname(glasbey())
+
+
+
+#import data
+CT_MASTER = read.csv("P:/Research_and_Monitoring/_04_Project_Data/Water_Quality/Cow_and_Thorn_Creeks/Cow Creek/Stream_Flow_and_Water_Quality/Master_Data/Water_Quality_Data/PCD_ML_Merge.csv")
+
+KT_MASTER = read.csv("R:/_04_Project_Data/Water_Quality/Kamiache_and_Thorn_Creeks/Kamiache_Creek/Stream_Flow_and_Water_Quality/Master_Data/Water_Quality_Data/PCD_ML_Merge.csv")
+
+NSF_MASTER = read.csv("P:/Research_and_Monitoring/_04_Project_Data/Water_Quality/Palouse_River_Tribs/Stream_Flow_and_Water_Quality/Master_Data/Water_Quality_Data/PCD_ML_Merge_For_EIM_20220519.csv")
+
+
+# COW & THORN DATA SET UP
+if(WATERSHED_NAME == "Cow and Thorn Creeks"){
+  COW0.07 = as.data.frame(CT_MASTER)
+  COW0.07$DT_round = ymd_hms(COW0.07$DT_round)
+  COW0.07 = COW0.07 = COW0.07[order(COW0.07$DT_round),]
+  COW0.07$CREEK = NA
+  for(i in 1:nrow(COW0.07)){
+    if(COW0.07[i,1] == "COW0.07" | COW0.07[i,1] == "COW2.66" | COW0.07[i,1] == "COW2.66A" | COW0.07[i,1] == "COW07.4" | COW0.07[i,1] == "COW07.5" | COW0.07[i,1] == "COW11.96" | COW0.07[i,1] == "COW18.03"){
+       COW0.07[i,24] = "Cow Creek"
+      
+    }
+    else{
+      COW0.07[i,24] = "Thorn Creek"
+      
+    }
+    
+    
+  }
+  
+  EXT_WEBSITE = "https://wacds.maps.arcgis.com/apps/MapSeries/index.html?appid=404b3d1ffb974b2abf2cf6d38d87cff0"
+  }
+
+# KAMIACHE & THORN DATA SETUP
+if(WATERSHED_NAME == "Kamiache and Thorn Creeks"){
+  COW0.07 = as.data.frame(KT_MASTER)
+  COW0.07$DT_round = ymd_hms(COW0.07$DT_round)
+  COW0.07 = COW0.07 = COW0.07[order(COW0.07$DT_round),]
+  COW0.07 = COW0.07[,c(2,3,5,8:10,13,16,18:31,4)]
+  for(i in 1:nrow(COW0.07)){
+    if(COW0.07[i,1] == "KC02.8" | COW0.07[i,1] == "KC03.2" | COW0.07[i,1] == "KC03.9" | COW0.07[i,1] == "KC04.9" | COW0.07[i,1] == "KC06.7"){
+       COW0.07[i,24] = "Kamiache Creek"
+      
+    }
+    else{
+      COW0.07[i,24] = "Thorn Creek"
+      
+    }
+    
+    
+  }
+  EXT_WEBSITE = "http://wacds.maps.arcgis.com/apps/MapSeries/index.html?appid=d80e7c6637154804b7800e56d3ce0a61"
+}
+
+#NORTH & SOUTHFORK DATA SETUP
+if(WATERSHED_NAME == "North and South Fork"){
+  COW0.07 <-  as.data.frame(NSF_MASTER)
+  COW0.07$DT_round = mdy_hm(COW0.07$DT_round)
+  
+  
+  COW0.07 = COW0.07 = COW0.07[order(COW0.07$DT_round),]
+  COW0.07$CREEK = NA
+  
+  # ITERATE THROUGH SITE NAMES AND USE THEM TO ASSIGN A NEW COLUMN WITH WATERSHED NAME
+  for(i in 1:nrow(COW0.07)){
+    if(COW0.07[i,2] == "DC0.51" | COW0.07[i,2] == "NFPR12" | COW0.07[i,2] == "NFPR3" | COW0.07[i,2] == "NFPR5A" | COW0.07[i,2] == "NFPR6" | COW0.07[i,2] == "NFPR8" | COW0.07[i,2] == "NFPR9" | COW0.07[i,2] == "PAL112.4" ){
+       COW0.07[i,24] = "North Fork Palouse River"
+      
+    }
+    else{
+      COW0.07[i,24] = "South Fork Palouse River"
+      
+    }
+    
+    
+  }
+  
+  #EXT_WEBSITE = "https://wacds.maps.arcgis.com/apps/MapSeries/index.html?appid=404b3d1ffb974b2abf2cf6d38d87cff0"
+  }
+
+
+
+COW0.07_FIXED = COW0.07
+
+COW0.07_FIXED$Flow..cfs. = round(COW0.07_FIXED$Flow..cfs., 3)
+
+# COW & THORN FIRST/LAST SAMPLE AND MAP SET UP
+if(WATERSHED_NAME == "Cow and Thorn Creeks"){
+
+FIRST_SAMPLE = format(COW0.07_FIXED[1, 2], format = "%m/%d/%Y")
+
+LAST_SAMPLE = format(COW0.07_FIXED[nrow(COW0.07_FIXED), 2], format = "%m/%d/%Y")
+DISPLAY = "P:/Research_and_Monitoring/_04_Project_Data/Water_Quality/_2_R_Scripts/WQM_Markdown/CT_Sites.png"
+
+}
+
+# KAMIACHE & THORN FIRS/LAST SAMPLE AND MAP SET UP
+if(WATERSHED_NAME == "Kamiache and Thorn Creeks"){
+
+FIRST_SAMPLE = format(COW0.07_FIXED[1, 2], format = "%m/%d/%Y")
+FIRST_SAMPLE = mdy(FIRST_SAMPLE)
+LAST_SAMPLE = format(COW0.07_FIXED[nrow(COW0.07_FIXED), 2], format = "%m/%d/%Y")
+LAST_SAMPLE = mdy(LAST_SAMPLE)
+
+DISPLAY = "P:/Research_and_Monitoring/_04_Project_Data/Water_Quality/_2_R_Scripts/WQM_Markdown/KT_Sites.png"
+}
+
+# NORTH & SOUTH FORK FIRST/LAST SAMPLE AND MAP SET UP
+if(WATERSHED_NAME == "North and South Fork"){
+
+FIRST_SAMPLE = format(COW0.07_FIXED[2, 3], format = "%m/%d/%Y")
+LAST_SAMPLE = format(COW0.07_FIXED[nrow(COW0.07_FIXED), 3], format = "%m/%d/%Y")
+
+
+DISPLAY = "P:/Research_and_Monitoring/_04_Project_Data/Water_Quality/_2_R_Scripts/WQM_Markdown/NSF_sites.png"
+}
+
+
+```
+<center>
+![](P:/Research_and_Monitoring/_04_Project_Data/Water_Quality/_2_R_Scripts/WQM_Markdown/PCD.png){#id .class width=75 height=90px}
+</center>
+
+<center>
+# `r WATERSHED_NAME` Water Quality Report - `r LAST_SAMPLE`
+</center>
+
+This is a watershed summary created by the Palouse Conservation District's Research & Monitoring program. This report contains data from water quality samples collected on `r WATERSHED_NAME`Palouse River. Measurements have been collected monthly since `r FIRST_SAMPLE`, with the last water sample collected on `r LAST_SAMPLE`. Several figures have been generated below to show the trends in water quality parameters over the course of the sampling period. For more information, please contact Ryan Boylan at RyanB@PalouseCD.org, or Gerrit Bass at GerritB@PalouseCD.org. You can also visit our website for more information about the Research & Monitoring program, https://www.palousecd.org/research-and-monitoring. 
+
+***
+
+```{r print_map, echo=FALSE, warning=FALSE, out.width='100%'}
+knitr::include_graphics(DISPLAY)
+```
+
+### **Water Temperature** 
+
+The figures below display water temperature ($^\circ$C) from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. The red dotted line represents the State of Washington's threshold for water temperature (17.5$^\circ$C)([**WAC 173-201A-200**](https://apps.leg.wa.gov/wac/default.aspx?cite=173-201a-200)). Temperature is measured in the field using a YSI ProDSS.
+
+```{r temperature_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+#set up temporary file
+TEMP = COW0.07_FIXED[,c(2,3, 12, 24)]
+colnames(TEMP) = c("Station", "Datetime", "Temperature", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = Temperature, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  geom_hline(aes(yintercept = 17.5, linetype ="Temperature Maximum"), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("Water Temperature (degC)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+TEMP_PLOT
+
+```
+</center>
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **Dissolved Oxygen** 
+
+The figures below display dissolved oxygen (DO), in milligrams per liter (mg/L) from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. The red dotted line represents the lower threshold for DO (9.5 mg/L) established by the State of Washington ([**WAC 173-201A-200**](https://apps.leg.wa.gov/wac/default.aspx?cite=173-201a-200)). DO is the amount of gaseous oxygen dissolved in the water, which benefits aquatic life. DO levels can change seasonally and even throughout the day. DO is measured in the field using a YSI ProDSS. 
+
+```{r DO_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = COW0.07_FIXED[,c(2,3, 15, 24)]
+colnames(TEMP) = c("Station", "Datetime", "DO", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = DO, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+   geom_hline(aes(yintercept = 9.5, linetype ="Dissolved Oxygen Min."), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("Dissolved Oxygen (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **Specific Conductivity**
+The figures below display specific conductivity (SC), measured in microsiemens per centimeter (uS/cm), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`.  This is a measure of electrical conductance and acts as an indicator for the concentration of salts and other ions in the water. Conductivity is measured in the field using a YSI ProDSS.
+
+```{r Conduct_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = COW0.07_FIXED[,c(2,3, 16, 24)]
+colnames(TEMP) = c("Station", "Datetime", "COND", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = COND, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  ylab("Conductivity (uS/cm)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **pH** 
+The figures below display pH levels in the stream from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. pH is a measure of acidity or alkalinity. Values range from 0 to 14 and are important indicators of health in aquatic ecosystems. Differing pH levels allow for different amounts of chemical constituents, such as heavy metals and nutrients, to be dissolved in water. pH is measured using a handheld YSI ProDSS. The graph includes the minimum and maximum thresholds, 6.5 and 8.5 pH units respectively, for pH according to the Water Quality Standards for Surface Waters of the State of Washington ([**WAC 173-201A-200**](https://apps.leg.wa.gov/wac/default.aspx?cite=173-201a-200)).
+
+```{r pH_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = COW0.07_FIXED[,c(2,3, 17, 24)]
+colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  geom_hline(aes(yintercept = 8.5, linetype ="pH Limits"), color = "red", size = 2)+
+  geom_hline(aes(yintercept = 6.5, linetype ="pH Limits"), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("pH")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **Turbidity** 
+The figures below display a measure of water clarity, measured in nephelometric turbidity units (NTU), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Turbidity is measured by determining how much light can pass through the water. Water clarity directly affects ecological productivity and habitat quality in aquatic environments. Excessive turbidity can be caused by physical disruption of the stream channel or through sediment inputs as a result of runoff and upland erosion.  Turbidity is measured using a handheld YSI DSSPro.
+
+```{r Turbid_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+TEMP = COW0.07_FIXED[,c(2,3, 18, 24)]
+colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  ylab("Log of Turbidity (NTU)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))+
+  scale_y_log10(labels = function(x) format(x, scientific = FALSE))
+  
+ 
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\n
+
+**Note: Y-axis is on a log scale to better visualize full spectrum of data values**
+
+\newpage
+
+### **Discharge (Q)** 
+The figures below show the discharge of the stream, measured in cubic feet per second (CFS) from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Stream discharge is calculated by measuring velocity across the cross-sectional area of a stream channel. Measuring devices include a velocimeter and stadia rod or measuring tape. Discharge allows for the calculation of nutrient and sediment loading for a stream.
+
+```{r Q_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = COW0.07_FIXED[,c(2,3, 20, 24)]
+colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  ylab("Discharge (CFS)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~., scales = "free_y")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed measurements
+
+\newpage
+
+### **Fecal Coliform** 
+The figures below show fecal coliform, measured in colonies per 100 milliliters (cols/100mL), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. The graph also included a red dotted line representing the State of Washington's threshold for fecal coliform levels ([**WAC 173-201A-200**](https://apps.leg.wa.gov/wac/default.aspx?cite=173-201a-200)). A fecal coliform is a group of coliform bacteria used to indicate fecal contamination in water bodies. The samples are collected in-stream and analyzed at the Colfax Wastewater Treatment Plant. 
+
+```{r FC_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+if(WATERSHED_NAME == "Cow and Thorn Creeks" |WATERSHED_NAME == "North and South Fork"){
+TEMP = COW0.07_FIXED[,c(2,3, 19, 24)]
+colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  geom_hline(aes(yintercept = 200, linetype ="Fecal Coliform Maximum"), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("Fecal Coliform (cols/100mL)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+}
+
+if(WATERSHED_NAME == "Kamiache and Thorn Creeks"){
+  cat("Date unavailable for this site")
+}
+
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Ammonia** 
+The figures below display ammonia concentration, measured in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Nitrate, nitrite, and ammonia are three common forms of nitrogen found in streams. Nitrogen is found naturally in the environment and is fairly abundant. However, excess nitrogen, from sewage systems and fertilizer applications, can push aquatic ecosystems out of equilibrium and harm them. Ammonia concentrations are derived from in-stream water samples analyzed at Manchester Environmental Laboratory.
+
+```{r NH3_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+if(WATERSHED_NAME == "North and South Fork"){
+  TEMP = COW0.07_FIXED[,c(2,3, 4, 24)]
+  colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+  
+  TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+    geom_point(size = 5)+
+    geom_line(size = 2)+
+    ylab("Ammonia (mg/L)")+
+    xlab("")+
+    theme_solarized_2(light = FALSE, base_size = 20)+
+    theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+    labs(color = "Monitoring Station")+
+    facet_grid(CREEK~.)+
+    theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+    scale_color_manual(values = colors)+
+    scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+    theme(axis.text.x=element_text(angle=60, hjust=1))+
+      scale_y_log10()
+    
+  
+  TEMP_PLOT
+}
+
+if(WATERSHED_NAME == "Kamiache and Thorn Creeks"){
+  cat("Date unavailable for this site")
+}
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Nitrate/Nitrite**
+The figures below display nitrate/nitrite measurements, measured in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. As stated above, nitrate, nitrite, and ammonia are all sources of nitrogen in rivers. Nitrate & nitrite samples are collected in-stream and analyzed at Manchester Environmental Laboratory. See above for more information on the role of nitrogen in aquatic ecosystems.
+
+```{r N_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = COW0.07_FIXED[,c(2,3, 5, 24)]
+colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  ylab("Nitrate/Nitrite (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Total Phosphorus** 
+The figures below display the total phosphorus concentration, in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Also, denoted by a red dotted line, is the threshold concentration for phosphorus recommended by the U.S EPA. Total phosphorus and orthophosphate are two forms of phosphorus measured in streams. Much like nitrogen, while being a vital nutrient for aquatic plant life, when present in excess, phosphorus can be detrimental. Phosphorus is used as a chemical fertilizer in agriculture and can lead to eutrophication in streams and lakes. Total phosphorus samples are collected in-stream and analyzed at Manchester Environmental Laboratory. 
+
+```{r TP_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = COW0.07_FIXED[,c(2,3, 7, 24)]
+colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  geom_hline(aes(yintercept = 0.1, linetype ="Total Phosphorus Max."), color = "red", size = 2)+
+  scale_linetype_manual(name = "Water Quality Criteria", values = 2, 
+                      guide = guide_legend(override.aes = list(color = "red")))+
+  ylab("Total Phosphorus (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Orthophosphate**
+The figures below display orthophosphate (OP) concentrations, in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. In addition to the total phosphorus values displayed above, orthophosphates can provide an estimate of how much phosphorus is plant available. OP can also aid in the identification of pollution sources since it is commonly derived from fertilizers or other anthropogenic sources. Orthophosphate samples are collected in-stream and analyzed at Manchester Environmental Laboratory.
+
+```{r OP_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = COW0.07_FIXED[,c(2,3, 6, 24)]
+colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  ylab("Orthophosphate (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\newpage
+
+### **Suspended Sediment Concentration** 
+The figures below display suspended sediment concentration (SSC), measured in milligrams per liter (mg/L), from `r FIRST_SAMPLE` to `r LAST_SAMPLE`. Sediment typically enters streams after a rainfall event through erosion and runoff. Depending on the power of the stream and the amount of sediment, it can either be transported downstream or deposited in the channel. Both of these actions, in excess, can cause problems for aquatic ecosystems and downstream water users since sediment can carry pollutants and have other adverse effects on biota. SSC samples are collected in-stream and analyzed at Manchester Environmental Laboratory.
+
+```{r sed_graph, echo=FALSE, message=FALSE, warning=FALSE, fig.width=14, fig.height=12}
+
+
+TEMP = COW0.07_FIXED[,c(2,3, 8, 24)]
+colnames(TEMP) = c("Station", "Datetime", "pH", "CREEK")
+
+TEMP_PLOT = ggplot(TEMP, aes(x = as.Date(Datetime), y = pH, group = factor(Station), color = Station))+
+  geom_point(size = 5)+
+  geom_line(size = 2)+
+  ylab("Log of Suspended Sediment Concentration (mg/L)")+
+  xlab("")+
+  theme_solarized_2(light = FALSE, base_size = 20)+
+  theme(legend.position = "right", panel.grid.minor.x = element_blank())+
+  labs(color = "Monitoring Station")+
+  facet_grid(CREEK~.)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=2))+
+  scale_color_manual(values = colors)+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")+
+  theme(axis.text.x=element_text(angle=60, hjust=1))+
+   scale_y_log10(labels = function(x) format(x, scientific = FALSE))
+
+
+TEMP_PLOT
+
+
+
+```
+
+*Note: Figures may include gaps in data due to missed samples
+
+\n
+
+**Note: Y-axis is on a log scale to better visualize full spectrum of data values** 
+
